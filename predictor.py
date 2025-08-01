@@ -93,3 +93,24 @@ def predict_direction(df, days=5):
     labels = ['Up' if p == 1 else 'Down' for p in preds]
 
     return pd.DataFrame({'Date': future_dates, 'Direction': labels})
+
+def engineer_features(df):
+    # 🔄 Handle MultiIndex columns like ('Close', 'AAPL')
+    if isinstance(df.columns, pd.MultiIndex):
+        if 'Close' in df.columns.get_level_values(0):
+            df.columns = df.columns.droplevel(1)  # Drop the ticker level if present
+        else:
+            df.columns = [col[0] for col in df.columns]  # Simplify MultiIndex
+
+    # ✅ Ensure 'Close' column exists
+    if 'Close' not in df.columns:
+        raise ValueError("Expected 'Close' column not found in DataFrame!")
+
+    df['Return_1D'] = df['Close'].pct_change()
+    df['Return_5D'] = df['Close'].pct_change(5)
+    df['SMA_5'] = df['Close'].rolling(5).mean()
+    df['SMA_10'] = df['Close'].rolling(10).mean()
+    df['Volatility'] = df['Close'].rolling(5).std()
+    df = df.dropna()
+
+    return df
