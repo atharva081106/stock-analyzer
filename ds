@@ -1,0 +1,23 @@
+<section id="products">
+    <h2>Our Products</h2>
+    <div class="product-grid">
+        <div class="product" data-name="T-Shirt" data-price="15">
+            <img src="images/1.webp" alt="T-Shirt">
+            <h3>T-Shirt</h3>
+            <p>Price: $15</p>
+            <button onclick="addToCart('T-Shirt', 15)">Add to Cart</button>
+        </div>
+        <div class="product" data-name="T-shirt" data-price="15">
+            <img src="images/2.jpg" alt="T-shirt">
+            <h3>T-shirt</h3>
+            <p>Price: $15</p>
+            <button onclick="addToCart('T-shirt', 15)">Add to Cart</button>
+        </div>
+        <div class="product" data-name="T-shirt" data-price="15">
+            <img src="images/3.webp" alt="T-shirt">
+            <h3>T-shirt</h3>
+            <p>Price: $15</p>
+            <button onclick="addToCart('T-shirt', 15)">Add to Cart</button>
+        </div>
+    </div>
+</section>
