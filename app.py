@@ -12,14 +12,7 @@ from charts import (
 )
 from compare import compare_stocks
 from get_live import get_live_price
-
-# Optional Telegram integration
-try:
-    from notify import send_telegram_message
-    TELEGRAM_ENABLED = True
-except ImportError:
-    TELEGRAM_ENABLED = False
-
+from notify import send_telegram_message
 import pandas as pd
 
 st.set_page_config(page_title="📈 Stock Analyzer", layout="wide")
@@ -43,12 +36,13 @@ if option == "Single Stock":
         ticker = st.text_input("🔎 Enter Ticker Symbol", "AAPL").upper()
         days_ahead = st.slider("📅 Days to Predict", 1, 10, 5)
         model_type = st.selectbox("🤖 Prediction Model", ["Linear", "XGBoost", "Prophet", "Direction"])
-        notify = st.checkbox("🔔 Send to Telegram (if configured)", value=False)
+        send_alert = st.checkbox("🔔 Send to Telegram (if configured)")
         run = st.button("🚀 Run Analysis")
 
     if run and ticker:
-        with st.spinner("Fetching data..."):
+        with st.spinner("📡 Fetching data..."):
             df = fetch_data(ticker)
+            st.write("ℹ️ Columns in data:", df.columns)  # Debugging aid
 
         st.subheader(f"📈 Stock: {ticker}")
         col1, col2 = st.columns([3, 1])
@@ -65,35 +59,30 @@ if option == "Single Stock":
         st.markdown("### 📈 Performance Since Start (Base = 100)")
         st.plotly_chart(plot_single_stock_performance(df, ticker), use_container_width=True)
 
-        with st.spinner("Generating predictions..."):
+        with st.spinner("🔮 Generating predictions..."):
             if model_type == "Linear":
                 pred_df = train_linear_model(df, days_ahead)
                 st.markdown("### 🔮 Linear Regression Prediction")
                 st.plotly_chart(plot_prediction(pred_df), use_container_width=True)
                 st.download_button("⬇️ Download Linear Forecast", pred_df.to_csv(index=False), file_name="linear_forecast.csv")
-                if notify and TELEGRAM_ENABLED:
-                    send_telegram_message(f"{ticker} Linear Regression: {pred_df.iloc[-1]['Predicted Close']:.2f}")
             elif model_type == "XGBoost":
                 pred_df = train_xgboost_model(df, days_ahead)
                 st.markdown("### 🔮 XGBoost Prediction")
                 st.plotly_chart(plot_prediction(pred_df), use_container_width=True)
                 st.download_button("⬇️ Download XGBoost Forecast", pred_df.to_csv(index=False), file_name="xgboost_forecast.csv")
-                if notify and TELEGRAM_ENABLED:
-                    send_telegram_message(f"{ticker} XGBoost: {pred_df.iloc[-1]['Predicted Close']:.2f}")
             elif model_type == "Prophet":
                 pred_df = forecast_with_prophet(df, days_ahead)
                 st.markdown("### 🔮 Prophet Prediction")
                 st.plotly_chart(plot_prediction(pred_df), use_container_width=True)
                 st.download_button("⬇️ Download Prophet Forecast", pred_df.to_csv(index=False), file_name="prophet_forecast.csv")
-                if notify and TELEGRAM_ENABLED:
-                    send_telegram_message(f"{ticker} Prophet: {pred_df.iloc[-1]['Predicted Close']:.2f}")
             else:
                 pred_df = predict_direction(df, days_ahead)
                 st.markdown("### 🧭 Direction Forecast (Up/Down)")
                 st.dataframe(pred_df, use_container_width=True)
                 st.download_button("⬇️ Download Direction Prediction", pred_df.to_csv(index=False), file_name="direction_forecast.csv")
-                if notify and TELEGRAM_ENABLED:
-                    send_telegram_message(f"{ticker} Direction: {pred_df.iloc[-1]['Direction']}")
+
+            if send_alert:
+                send_telegram_message(f"📈 Stock Alert: {ticker} - {model_type} model run for {days_ahead} days!")
 
 # ─────────────────────────────────────────────────────────────
 # Compare Mode
